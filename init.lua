@@ -142,7 +142,13 @@ local plugins = {
   },
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
-    dependencies = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip', 'windwp/nvim-autopairs' },
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+      'windwp/nvim-autopairs',
+      'rafamadriz/friendly-snippets'
+    },
     event = "InsertEnter",
     config = function()
       local cmp = require 'cmp'
@@ -158,6 +164,9 @@ local plugins = {
       -- }
       local cmp_autopairs = require("nvim-autopairs.completion.cmp")
       cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+
+      -- add snippets from friendly-snippets
+      require("luasnip.loaders.from_vscode").lazy_load()
 
       cmp.setup {
         snippet = {
@@ -259,7 +268,7 @@ local plugins = {
             },
           },
           swap = {
-           enable = true,
+            enable = true,
             swap_next = {
               ['<leader>a'] = '@parameter.inner',
             },
@@ -346,7 +355,8 @@ local plugins = {
     cmd = { "Telescope" },
     dependencies = {
       "nvim-lua/plenary.nvim",
-      { "nvim-telescope/telescope-fzf-native.nvim", build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build" }
+      { "nvim-telescope/telescope-fzf-native.nvim",
+        build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build" }
     },
     config = function()
       -- See `:help telescope` and `:help telescope.setup()`
