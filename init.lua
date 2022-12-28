@@ -23,7 +23,10 @@ local plugins = {
       -- Additional lua configuration, makes nvim stuff amazing
       'folke/neodev.nvim',
 
-      'hrsh7th/cmp-nvim-lsp'
+      'hrsh7th/cmp-nvim-lsp',
+
+      -- formatting integration from mason
+      'jose-elias-alvarez/null-ls.nvim'
     },
     config = function()
       -- Enable the following language servers
@@ -51,6 +54,14 @@ local plugins = {
       vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
       vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
       vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
+
+      -- null-ls sources
+      local null_ls = require('null-ls')
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.formatting.stylua,
+        }
+      })
 
       -- LSP settings.
       --  This function gets run when an LSP connects to a particular buffer.
@@ -147,7 +158,8 @@ local plugins = {
       'L3MON4D3/LuaSnip',
       'saadparwaiz1/cmp_luasnip',
       'windwp/nvim-autopairs',
-      'rafamadriz/friendly-snippets'
+      'rafamadriz/friendly-snippets',
+      "onsails/lspkind.nvim"
     },
     event = "InsertEnter",
     config = function()
@@ -202,9 +214,26 @@ local plugins = {
           end, { 'i', 's' }),
         },
         sources = {
+          { name = 'nvim_lua' },
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
         },
+        formatting = {
+          format = require('lspkind').cmp_format({
+            mode = 'symbol',
+            maxwidth = 50,
+            ellipsis_char = '...',
+            menu = {
+              buffer = "[buf]",
+              nvim_lsp = "[LSP]",
+              nvim_lua = "[api]",
+              path = "[path]",
+              luasnip = "[snip]",
+              gh_issues = "[issues]",
+              tn = "[TabNine]",
+            },
+          })
+        }
       }
     end
   },
