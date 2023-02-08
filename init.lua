@@ -58,14 +58,16 @@ local plugins = {
       -- Diagnostic keymaps
       vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
       vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
-      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float)
-      vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist)
+      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, {desc = "[E]xpand diagnostic"})
+      vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, {desc = "Diagnostics list"})
 
       -- null-ls sources
       local null_ls = require("null-ls")
       null_ls.setup({
+        -- TODO: Set this up automatically. check out jay-babu/mason-null-ls.nvim?
         sources = {
           null_ls.builtins.formatting.stylua,
+          null_ls.builtins.formatting.black
         },
       })
 
