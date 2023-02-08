@@ -239,6 +239,9 @@ local plugins = {
             },
           }),
         },
+        experimental = {
+          ghost_text = true,
+        },
       })
     end,
   },
@@ -358,8 +361,17 @@ local plugins = {
         options = {
           icons_enabled = false,
           theme = "catppuccin",
+
           -- component_separators = '|',
           -- section_separators = '',
+        },
+        sections = {
+          lualine_c = {
+            {
+              "filename",
+              path = 1, -- relative path
+            },
+          },
         },
       })
     end,
