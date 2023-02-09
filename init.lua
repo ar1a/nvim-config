@@ -33,6 +33,7 @@ local plugins = {
 
       -- formatting integration from mason
       "jose-elias-alvarez/null-ls.nvim",
+      "jay-babu/mason-null-ls.nvim",
     },
     config = function()
       -- Enable the following language servers
@@ -58,18 +59,21 @@ local plugins = {
       -- Diagnostic keymaps
       vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
       vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
-      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, {desc = "[E]xpand diagnostic"})
-      vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, {desc = "Diagnostics list"})
+      vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "[E]xpand diagnostic" })
+      vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostics list" })
 
       -- null-ls sources
       local null_ls = require("null-ls")
       null_ls.setup({
-        -- TODO: Set this up automatically. check out jay-babu/mason-null-ls.nvim?
         sources = {
           null_ls.builtins.formatting.stylua,
-          null_ls.builtins.formatting.black
         },
       })
+
+      require("mason-null-ls").setup({
+        automatic_setup = true,
+      })
+      require 'mason-null-ls'.setup_handlers()
 
       -- LSP settings.
       --  This function gets run when an LSP connects to a particular buffer.
@@ -143,125 +147,124 @@ local plugins = {
       mason_lspconfig.setup_handlers({
         function(server_name)
           require("lspconfig")[server_name].setup({
-            capabilities = capabilities,
-            on_attach = on_attach,
-            settings = servers[server_name],
+  capabilities = capabilities,
+on_attach = on_attach,
+settings = servers[server_name],
+})
+end,
+      })
+
+-- Turn on lsp status information
+require("fidget").setup({
+  window = {
+  blend = 0,
+},
+})
+end,
+},
+{ -- Autocompletion
+"hrsh7th/nvim-cmp",
+dependencies = {
+  "hrsh7th/cmp-nvim-lsp",
+"L3MON4D3/LuaSnip",
+"saadparwaiz1/cmp_luasnip",
+"windwp/nvim-autopairs",
+"rafamadriz/friendly-snippets",
+"onsails/lspkind.nvim",
+},
+event = "InsertEnter",
+config = function()
+  local cmp = require("cmp")
+local luasnip = require("luasnip")
+
+          -- setup autopairing
+          require("nvim-autopairs").setup({
+              check_ts = true,
+          })
+          -- enable pressing enter in a {} block to turn it into a
+          -- {
+          --  <cursor>
+          -- }
+          local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+          cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+
+          -- add snippets from friendly-snippets
+          require("luasnip.loaders.from_vscode").lazy_load()
+
+          cmp.setup({
+              snippet = {
+                  expand = function(args)
+                    luasnip.lsp_expand(args.body)
+                  end,
+              },
+              mapping = cmp.mapping.preset.insert({
+                  ["<C-d>"] = cmp.mapping.scroll_docs( -4),
+                  ["<C-f>"] = cmp.mapping.scroll_docs(4),
+                  ["<C-Space>"] = cmp.mapping.complete(),
+                  ["<CR>"] = cmp.mapping.confirm({
+                      behavior = cmp.ConfirmBehavior.Replace,
+                      select = true,
+                  }),
+                  ["<Tab>"] = cmp.mapping(function(fallback)
+                    if cmp.visible() then
+                      cmp.select_next_item()
+                    elseif luasnip.expand_or_jumpable() then
+                      luasnip.expand_or_jump()
+                    else
+                      fallback()
+                    end
+                  end, { "i", "s" }),
+                  ["<S-Tab>"] = cmp.mapping(function(fallback)
+                    if cmp.visible() then
+                      cmp.select_prev_item()
+                    elseif luasnip.jumpable( -1) then
+                      luasnip.jump( -1)
+                    else
+                      fallback()
+                    end
+                  end, { "i", "s" }),
+              }),
+              sources = {
+                  { name = "nvim_lua" },
+                  { name = "nvim_lsp" },
+                  { name = "luasnip" },
+              },
+              formatting = {
+                  format = require("lspkind").cmp_format({
+                      mode = "symbol",
+                      maxwidth = 50,
+                      ellipsis_char = "...",
+                      menu = {
+                          buffer = "[buf]",
+                          nvim_lsp = "[LSP]",
+                          nvim_lua = "[api]",
+                          path = "[path]",
+                          luasnip = "[snip]",
+                          gh_issues = "[issues]",
+                          tn = "[TabNine]",
+                      },
+                  }),
+              },
+              experimental = {
+                  ghost_text = true,
+              },
           })
         end,
-      })
-
-      -- Turn on lsp status information
-      require("fidget").setup({
-        window = {
-          blend = 0,
-        },
-      })
-    end,
-  },
-  { -- Autocompletion
-    "hrsh7th/nvim-cmp",
-    dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "L3MON4D3/LuaSnip",
-      "saadparwaiz1/cmp_luasnip",
-      "windwp/nvim-autopairs",
-      "rafamadriz/friendly-snippets",
-      "onsails/lspkind.nvim",
     },
-    event = "InsertEnter",
-    config = function()
-      local cmp = require("cmp")
-      local luasnip = require("luasnip")
-
-      -- setup autopairing
-      require("nvim-autopairs").setup({
-        check_ts = true,
-      })
-      -- enable pressing enter in a {} block to turn it into a
-      -- {
-      --  <cursor>
-      -- }
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
-
-      -- add snippets from friendly-snippets
-      require("luasnip.loaders.from_vscode").lazy_load()
-
-      cmp.setup({
-        snippet = {
-          expand = function(args)
-            luasnip.lsp_expand(args.body)
-          end,
-        },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-d>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<CR>"] = cmp.mapping.confirm({
-            behavior = cmp.ConfirmBehavior.Replace,
-            select = true,
-          }),
-          ["<Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
-          ["<S-Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
-        }),
-        sources = {
-          { name = "nvim_lua" },
-          { name = "nvim_lsp" },
-          { name = "luasnip" },
-        },
-        formatting = {
-          format = require("lspkind").cmp_format({
-            mode = "symbol",
-            maxwidth = 50,
-            ellipsis_char = "...",
-            menu = {
-              buffer = "[buf]",
-              nvim_lsp = "[LSP]",
-              nvim_lua = "[api]",
-              path = "[path]",
-              luasnip = "[snip]",
-              gh_issues = "[issues]",
-              tn = "[TabNine]",
-            },
-          }),
-        },
-        experimental = {
-          ghost_text = true,
-        },
-      })
-    end,
-  },
-  { -- Highlight, edit, and navigate code
-    "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
-    event = "BufReadPost",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      "p00f/nvim-ts-rainbow",
+{ -- Highlight, edit, and navigate code
+"nvim-treesitter/nvim-treesitter",
+build = ":TSUpdate",
+event = "BufReadPost",
+dependencies = {
+  "nvim-treesitter/nvim-treesitter-textobjects",
+"p00f/nvim-ts-rainbow",
     },
     config = function()
       -- See `:help nvim-treesitter`
       require("nvim-treesitter.configs").setup({
         -- Add languages to be installed here that you want installed for treesitter
         ensure_installed = { "c", "cpp", "go", "lua", "python", "rust", "typescript", "help" },
-
-        highlight = { enable = true },
+highlight = { enable = true },
         indent = { enable = true, disable = { "python" } },
         incremental_selection = {
           enable = true,
@@ -361,7 +364,7 @@ local plugins = {
       -- See `:help lualine.txt`
       require("lualine").setup({
         options = {
-          icons_enabled = false,
+    icons_enabled = false,
           theme = "catppuccin",
 
           -- component_separators = '|',
@@ -448,32 +451,23 @@ local plugins = {
         require("telescope.builtin").current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
           winblend = 10,
           previewer = false,
-        }))
-      end, { desc = "[/] Fuzzily search in current buffer" })
+}))
+          end, { desc = "[/] Fuzzily search in current buffer" })
 
-      vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch [F]iles" })
-      vim.keymap.set("n", "<leader>sh", require("telescope.builtin").help_tags, { desc = "[S]earch [H]elp" })
-      vim.keymap.set(
-        "n",
-        "<leader>sw",
-        require("telescope.builtin").grep_string,
-        { desc = "[S]earch current [W]ord" }
-      )
-      vim.keymap.set("n", "<leader>sg", require("telescope.builtin").live_grep, { desc = "[S]earch by [G]rep" })
-      vim.keymap.set(
-        "n",
-        "<leader>sd",
-        require("telescope.builtin").diagnostics,
-        { desc = "[S]earch Diagnostics" }
-      )
-    end,
-  },
-  {
-    "dstein64/vim-startuptime",
+vim.keymap.set("n", "<leader>sf", require("telescope.builtin").find_files, { desc = "[S]earch [F]iles" })
+vim.keymap.set("n", "<leader>sh", require("telescope.builtin").help_tags, { desc = "[S]earch [H]elp" })
+vim.keymap.set("n", "<leader>sw", require("telescope.builtin").grep_string,
+{ desc = "[S]earch current [W]ord" })
+vim.keymap.set("n", "<leader>sg", require("telescope.builtin").live_grep, { desc = "[S]earch by [G]rep" })
+vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch Diagnostics" })
+end,
+},
+{
+"dstein64/vim-startuptime",
     cmd = "StartupTime",
-  },
-  {
-    "folke/which-key.nvim",
+},
+{
+"folke/which-key.nvim",
     event = "VeryLazy",
     config = function()
       require("which-key").setup({})
@@ -521,7 +515,7 @@ local plugins = {
     init = function()
       vim.keymap.set("n", "gx", require("substitute.exchange").operator, { noremap = true })
       vim.keymap.set("n", "gxx", require("substitute.exchange").line, { noremap = true })
-      vim.keymap.set("x", "X", require("substitute.exchange").visual, { noremap = true })
+vim.keymap.set("x", "X", require("substitute.exchange").visual, { noremap = true })
     end,
   },
   {
