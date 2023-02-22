@@ -37,6 +37,9 @@ local plugins = {
 
             -- rust support
             "simrat39/rust-tools.nvim",
+
+            -- diagnostics display
+            "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
         },
         config = function()
             -- Enable the following language servers
@@ -63,7 +66,14 @@ local plugins = {
             vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
             vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
             vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "[E]xpand diagnostic" })
-            vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostics list" })
+            vim.keymap.set("n", "<leader>q", "<cmd>Telescope diagnostics<CR>", { desc = "Diagnostics list" })
+
+            vim.diagnostic.config({
+                virtual_text = false, -- disable, because we use lsp_lines
+                severity_sort = true,
+            })
+
+            require("lsp_lines").setup()
 
             -- null-ls sources
             local null_ls = require("null-ls")
@@ -470,6 +480,7 @@ local plugins = {
             },
         },
         config = function()
+            local trouble = require("trouble.providers.telescope")
             -- See `:help telescope` and `:help telescope.setup()`
             require("telescope").setup({
                 defaults = {
@@ -477,6 +488,10 @@ local plugins = {
                         i = {
                             ["<C-u>"] = false,
                             ["<C-d>"] = false,
+                            ["<c-t>"] = trouble.open_with_trouble,
+                        },
+                        n = {
+                            ["<c-t>"] = trouble.open_with_trouble,
                         },
                     },
                 },
