@@ -182,9 +182,11 @@ local plugins = {
 
             rt.setup({
                 server = {
-                    on_attach = function(_, bufnr)
+                    on_attach = function(client, bufnr)
                         vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
                         vim.keymap.set("n", "<Leader>cb", rt.code_action_group.code_action_group, { buffer = bufnr })
+
+                        on_attach(client, bufnr)
                     end,
                 },
             })
@@ -287,6 +289,8 @@ local plugins = {
         dependencies = {
             "nvim-treesitter/nvim-treesitter-textobjects",
             "p00f/nvim-ts-rainbow",
+            "m-demare/hlargs.nvim",
+            "nvim-treesitter/nvim-treesitter-context",
         },
         config = function()
             -- See `:help nvim-treesitter`
@@ -355,6 +359,10 @@ local plugins = {
                     max_file_lines = nil,
                 },
             })
+
+            require("hlargs").setup()
+
+            require("treesitter-context").setup()
         end,
     },
     -- Git related plugins
@@ -586,6 +594,61 @@ local plugins = {
         config = function()
             require("various-textobjs").setup({ useDefaultKeymaps = true })
         end,
+    },
+    { -- Diagnostic list
+        "folke/trouble.nvim",
+        dependencies = {
+            "nvim-tree/nvim-web-devicons",
+        },
+        event = "BufReadPost",
+        config = function()
+            require("trouble").setup({})
+            vim.keymap.set("n", "<leader>xx", "<cmd>TroubleToggle<cr>", { desc = "Diagnostic list" })
+            vim.keymap.set("n", "<leader>xl", "<cmd>TroubleToggle loclist<cr>", { desc = "[L]ocation list" })
+            vim.keymap.set("n", "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", { desc = "[Q]uick fix" })
+        end,
+    },
+    {
+        "folke/todo-comments.nvim",
+        event = "VeryLazy",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+        },
+        config = true,
+    },
+    {
+        "RRethy/vim-illuminate",
+        event = "VeryLazy",
+    },
+    {
+        "danilamihailov/beacon.nvim",
+        event = "VeryLazy",
+    },
+    {
+        "nvim-neo-tree/neo-tree.nvim",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+            "nvim-tree/nvim-web-devicons",
+            "MunifTanjim/nui.nvim",
+        },
+        cmd = "Neotree",
+        keys = {
+            {
+                "<leader>ot",
+                function()
+                    require("neo-tree.command").execute({
+                        toggle = true,
+                    })
+                end,
+                desc = "Neo[T]ree",
+            },
+        },
+        config = {
+            filesystem = {
+                follow_current_file = true,
+                hijack_netrw_behavior = "open_current",
+            },
+        },
     },
 }
 
