@@ -34,6 +34,9 @@ local plugins = {
             -- formatting integration from mason
             "jose-elias-alvarez/null-ls.nvim",
             "jay-babu/mason-null-ls.nvim",
+
+            -- rust support
+            "simrat39/rust-tools.nvim",
         },
         config = function()
             -- Enable the following language servers
@@ -174,6 +177,17 @@ local plugins = {
                     blend = 0,
                 },
             })
+
+            local rt = require("rust-tools")
+
+            rt.setup({
+                server = {
+                    on_attach = function(_, bufnr)
+                        vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
+                        vim.keymap.set("n", "<Leader>cb", rt.code_action_group.code_action_group, { buffer = bufnr })
+                    end,
+                },
+            })
         end,
     },
     { -- Autocompletion
@@ -243,6 +257,10 @@ local plugins = {
                     { name = "nvim_lsp" },
                     { name = "luasnip" },
                 },
+                window = {
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered(),
+                },
                 formatting = {
                     format = require("lspkind").cmp_format({
                         mode = "symbol",
@@ -258,9 +276,6 @@ local plugins = {
                             tn = "[TabNine]",
                         },
                     }),
-                },
-                experimental = {
-                    ghost_text = true,
                 },
             })
         end,
@@ -278,7 +293,8 @@ local plugins = {
             require("nvim-treesitter.configs").setup({
                 -- Add languages to be installed here that you want installed for treesitter
                 ensure_installed = { "c", "cpp", "go", "lua", "python", "rust", "typescript", "help" },
-                highlight = { enable = true },
+                auto_install = true,
+                highlight = { enable = true, additional_vim_regex_highlighting = false },
                 indent = { enable = true, disable = { "python" } },
                 incremental_selection = {
                     enable = true,
@@ -336,6 +352,7 @@ local plugins = {
                 rainbow = {
                     enable = true,
                     extended_mode = true,
+                    max_file_lines = nil,
                 },
             })
         end,
@@ -393,6 +410,20 @@ local plugins = {
                     },
                 },
             })
+        end,
+    },
+    { -- Floating terminal
+        "voldikss/vim-floaterm",
+        event = "VeryLazy",
+        config = function()
+            vim.keymap.set(
+                "n",
+                "<leader>t",
+                ":FloatermNew --name=myfloat --height=0.8 --width=0.7 --autoclose=2 <CR>",
+                { desc = "Open [T]erminal" }
+            )
+            vim.keymap.set("n", "t", ":FloatermToggle myfloat <CR>")
+            vim.keymap.set("t", "<Esc>", "<C-\\><C-n>:q<CR>")
         end,
     },
     {
@@ -603,8 +634,8 @@ vim.opt.termguicolors = true
 
 -- Setup fold settings
 -- https://www.reddit.com/r/neovim/comments/psl8rq/sexy_folds/
--- vim.opt.foldmethod = "expr"
--- vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 -- vim.opt.foldtext = [[substitute(getline(v:foldstart),'\\t',repeat('\ ',&tabstop),'g').'...'.trim(getline(v:foldend)) . ' (' . (v:foldend - v:foldstart + 1) . ' lines)']]
 -- vim.opt.fillchars = "fold: "
 -- vim.opt.foldnestmax = 3
